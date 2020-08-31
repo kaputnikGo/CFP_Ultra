@@ -180,7 +180,6 @@ public class MainActivity extends Activity {
 
 			toggleHeadset();
 			handlerU = new Handler();
-			ultraService = new UltraService(audioBundle);
 			colourString = "A";
 			displayCounter = 0;
 		}
@@ -359,8 +358,11 @@ public class MainActivity extends Activity {
 		if (SCANNING) {
 			SCANNING = false;
 			ultraService.stopUltraService();
+			ultraService = null;
 		}
 		else {
+			// TODO audioBundle delivered here to FreqDetector and RecordTask
+			ultraService = new UltraService(audioBundle);
 			SCANNING = true;
 			startService();
 		}
