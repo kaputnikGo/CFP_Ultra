@@ -1,27 +1,25 @@
 package com.cityfreqs.cfp_ultra.util;
 
-import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 
 import com.cityfreqs.cfp_ultra.MainActivity;
-import com.cityfreqs.cfp_ultra.R;
 
 import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_BUNDLE_KEYS;
-import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_CHANNEL_OUT;
-import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_ENCODING;
+import static com.cityfreqs.cfp_ultra.util.AudioSettings.BIT_DEPTH;
 
 public class AudioChecker {
     private static final String TAG = "AudioChecker";
-    private Context context;
+    //private Context context;
     private Bundle audioBundle;
     private boolean DEBUG;
 
-    public AudioChecker(Context context, Bundle audioBundle) {
-        this.context = context;
+    public AudioChecker(Bundle audioBundle) {
+        //this.context = context;
         this.audioBundle = audioBundle;
+        // TODO use this to minimise prints to tiny debug screen in app
         DEBUG = audioBundle.getBoolean(AUDIO_BUNDLE_KEYS[16], true);
     }
 
@@ -83,6 +81,7 @@ public class AudioChecker {
                                 audioBundle.putInt(AUDIO_BUNDLE_KEYS[2], channelInConfig);
                                 audioBundle.putInt(AUDIO_BUNDLE_KEYS[3], audioFormat);
                                 audioBundle.putInt(AUDIO_BUNDLE_KEYS[4], buffSize);
+                                audioBundle.putInt(AUDIO_BUNDLE_KEYS[15], BIT_DEPTH[audioBundle.getInt(AUDIO_BUNDLE_KEYS[3])]);
 
                                 recorder.release();
                                 return true;
@@ -100,6 +99,7 @@ public class AudioChecker {
         return false;
     }
 
+    /*
     public boolean checkAudioRecord() {
         // return if can start new audioRecord object
         AudioRecord audioRecord;
@@ -138,14 +138,16 @@ public class AudioChecker {
         entryLogger(context.getString(R.string.audio_check_8));
         return true;
     }
+    */
 
     /*********************/
+    /*
     public String saveFormatToString() {
         return (audioBundle.getInt(AUDIO_BUNDLE_KEYS[1]) + " Hz, "
                 + AUDIO_ENCODING[audioBundle.getInt(AUDIO_BUNDLE_KEYS[3])] + ", "
                 + AUDIO_CHANNEL_OUT[audioBundle.getInt(AUDIO_BUNDLE_KEYS[5])]);
     }
-
+    */
     private void entryLogger(String entry) {
         MainActivity.logger(TAG, entry);
     }

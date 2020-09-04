@@ -33,6 +33,7 @@ import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_BUNDLE_KEYS;
 import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_CHANNEL_IN;
 import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_ENCODING;
 import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_SOURCE;
+import static com.cityfreqs.cfp_ultra.util.AudioSettings.MODE;
 
 public class MainActivity extends Activity {
 	private static final String TAG = "CFP_Ultra";
@@ -55,9 +56,11 @@ public class MainActivity extends Activity {
 	
 	private UltraService ultraService;
 	private Handler handlerU;
+	// service runner ms delay
 	private static final int SHORT_DELAY = 10; // debug says RecordTask takes .003 to do A-Za
 	private static final int LONG_DELAY = 1000;
 	private int runningDelay = LONG_DELAY;
+
 	private static int displayCounter;
 
 	private Bundle audioBundle;
@@ -67,6 +70,7 @@ public class MainActivity extends Activity {
 	private String[] freqRanges;
 	private String[] windowTypes;
 	private String[] dbLevel;
+	private String[] modeSettings;
 
 /*************************************************************************************/	
 	
@@ -154,6 +158,12 @@ public class MainActivity extends Activity {
 			case R.id.action_fft_window_settings:
 				changeFFTWindowSettings();
 				return true;
+			case R.id.action_mode_settings:
+				changeModeSettings();
+				return true;
+			case R.id.action_bundle_print:
+				bundlePrint();
+				return true;
 			default:
 				// do not consume the action
 				return super.onOptionsItemSelected(item);
@@ -169,10 +179,14 @@ public class MainActivity extends Activity {
 		audioBundle.putInt(AUDIO_BUNDLE_KEYS[11], AudioSettings.DEFAULT_FREQ_STEP);
 		audioBundle.putInt(AUDIO_BUNDLE_KEYS[12], AudioSettings.DEFAULT_MAGNITUDE);
 		audioBundle.putInt(AUDIO_BUNDLE_KEYS[13], AudioSettings.DEFAULT_WINDOW_TYPE);
-		audioBundle.putBoolean(AUDIO_BUNDLE_KEYS[14], true); //write audio files for scanner
+		audioBundle.putBoolean(AUDIO_BUNDLE_KEYS[14], false); //write audio files not applicable
 		audioBundle.putBoolean(AUDIO_BUNDLE_KEYS[16], DEBUG); //set DEBUG
+		audioBundle.putInt(AUDIO_BUNDLE_KEYS[17], AudioSettings.DEFAULT_MODE); //set MODE
+		// set NUHF defaults
+		audioBundle.putInt(AUDIO_BUNDLE_KEYS[9], AudioSettings.DEFAULT_FREQUENCY_MIN);
+		audioBundle.putInt(AUDIO_BUNDLE_KEYS[10], AudioSettings.DEFAULT_FREQUENCY_MAX);
 
-		AudioChecker audioChecker = new AudioChecker(this, audioBundle);
+		AudioChecker audioChecker = new AudioChecker(audioBundle);
 
 		if (audioChecker.determineRecordAudioType()) {
 			logger(TAG, getString(R.string.audio_check_pre_1));
@@ -273,6 +287,11 @@ public class MainActivity extends Activity {
 		dbLevel[4] = getResources().getString(R.string.magnitude_90_text);
 		dbLevel[5] = getResources().getString(R.string.magnitude_93_text);
 		dbLevel[6] = getResources().getString(R.string.magnitude_100_text);
+
+		modeSettings = new String[3];
+		modeSettings[0] = getResources().getString(R.string.mode_type_1);
+		modeSettings[1] = getResources().getString(R.string.mode_type_2);
+		modeSettings[2] = getResources().getString(R.string.mode_type_3);
 	}
 
 	/********************************************************************/
@@ -339,6 +358,35 @@ public class MainActivity extends Activity {
 		alertDialog.show();
 	}
 
+	private void changeModeSettings() {
+		dialogBuilder = new AlertDialog.Builder(this);
+		dialogBuilder.setItems(modeSettings, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialogInterface, int which) {
+				switch(which) {
+					case 0:
+						//Letter Sequence
+						audioBundle.putInt(AUDIO_BUNDLE_KEYS[17], 1);
+						break;
+					case 1:
+						// Binary Bit
+						audioBundle.putInt(AUDIO_BUNDLE_KEYS[17], 2);
+						break;
+					case 2:
+						//Clock FSK
+						audioBundle.putInt(AUDIO_BUNDLE_KEYS[17], 3);
+						break;
+					default:
+						// do nothing, catch dismisses
+						break;
+				}
+				logger(TAG, MODE[audioBundle.getInt(AUDIO_BUNDLE_KEYS[17])]+ " mode selected.");
+			}
+		});
+		dialogBuilder.setTitle(R.string.action_mode_settings);
+		alertDialog = dialogBuilder.create();
+		alertDialog.show();
+	}
+
 	private void setFreqMinMax(int pair) {
 		// at the moment stick to ranges of 3kHz as DEFAULT or SECOND pair
 		// use int as may get more ranges than the 2 presently used
@@ -398,6 +446,16 @@ public class MainActivity extends Activity {
 		}
 	}
 
+	private void bundlePrint() {
+		// debug printout to check vars in audioBundle
+		if (audioBundle == null) {
+			logger(TAG,"audioBundle not found.");
+		}
+		Bundle bundle = new Bundle();
+		bundle.putAll(audioBundle);
+		logger(TAG, bundle.toString());
+	}
+
 /********************************************************************/
 		
 	public static void payloadDelivery(String delivery) {
@@ -435,6 +493,7 @@ public class MainActivity extends Activity {
 		else if (displayCounter == 7) {
 			toasterMessage("Finished.");
 			displayCounter = 8;
+			// TODO call to stop service here
 			invokeWebsite();
 		}	
 	}
@@ -458,15 +517,16 @@ public class MainActivity extends Activity {
 		@Override
 		public void run() {
 			try {				
-				if (ultraService.sequenceDetected) {
-					// allow UltraService to continuously record for the sequence
-					colourDelivery();
-					runningDelay = SHORT_DELAY;
+				if (ultraService != null) {
+					if (ultraService.sequenceDetected) {
+						// allow UltraService to continuously record for the sequence
+						colourDelivery();
+						runningDelay = SHORT_DELAY;
+					} else {
+						runningDelay = LONG_DELAY;
+					}
+					ultraService.runUltraService();
 				}
-				else {
-					runningDelay = LONG_DELAY;
-				}
-				ultraService.runUltraService();
 			}
 			finally {
 				handlerU.postDelayed(serviceRunner, runningDelay);

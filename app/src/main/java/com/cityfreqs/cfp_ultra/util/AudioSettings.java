@@ -67,6 +67,14 @@ public class AudioSettings {
             inputSource = AUDIO_SOURCE_MIC;
         }
         */
+
+    public static final String[] MODE = new String[] {
+            "null", "Letter Sequence", "Binary Bits", "Clock FSK"
+    };
+    public static final int DEFAULT_MODE = 1;
+
+    public static final char[] ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+
     public static final String[] AUDIO_SOURCE = new String[] {
             "AUDIO_SOURCE_DEFAULT",
             "AUDIO_SOURCE_MIC",
@@ -91,6 +99,11 @@ public class AudioSettings {
             "ENCODING_DTS",
             "ENCODING_DTS_HD",
             "ENCODING_MP3"
+    };
+
+    // reflect numbering in AUDIO_ENCODING
+    public static final int[] BIT_DEPTH = new int[] {
+            0, 0, 16, 8, 32
     };
 
     //TODO add AUDIO_IN and AUDIO_OUT for channelInConfig and channelOutConfig
@@ -144,7 +157,8 @@ public class AudioSettings {
             "scanWindow", // 13
             "writeFiles", // 14
             "bitDepth", // 15
-            "debug" // 16
+            "debug", // 16
+            "mode" // 17 <- specifically for CFP_Ultra only
     };
     /*
      * Utilities, that may be useful...

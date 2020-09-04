@@ -669,6 +669,7 @@ id action_bar_root
 id action_bar_spinner
 id action_bar_subtitle
 id action_bar_title
+id action_bundle_print
 id action_container
 id action_context_bar
 id action_divider
@@ -679,6 +680,7 @@ id action_menu_presenter
 id action_mode_bar
 id action_mode_bar_stub
 id action_mode_close_button
+id action_mode_settings
 id action_sensitivity_settings
 id action_text
 id actions
@@ -728,6 +730,7 @@ id listMode
 id list_item
 id message
 id middle
+id mode_group
 id multiply
 id never
 id none
@@ -877,6 +880,8 @@ string abc_shareactionprovider_share_with_application
 string abc_toolbar_collapse_description
 string action_audio_scan_ranges
 string action_audio_scan_settings
+string action_bundle_print
+string action_mode_settings
 string action_sensitivity_settings
 string action_settings
 string action_window_settings
@@ -922,6 +927,9 @@ string magnitude_70_text
 string magnitude_80_text
 string magnitude_90_text
 string magnitude_93_text
+string mode_type_1
+string mode_type_2
+string mode_type_3
 string option_dialog_10
 string option_dialog_11
 string option_dialog_12

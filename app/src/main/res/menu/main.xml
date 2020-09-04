@@ -28,4 +28,19 @@
             android:title="@string/action_window_settings"/>
     </group>
 
+    <group android:id="@+id/mode_group">
+        <item
+            android:id="@+id/action_mode_settings"
+            android:orderInCategory="40"
+            app:showAsAction="never"
+            android:title="@string/action_mode_settings"/>
+        <item
+            android:id="@+id/action_bundle_print"
+            android:orderInCategory="45"
+            app:showAsAction="never"
+            android:title="@string/action_bundle_print"/>
+    </group>
+
+
+
 </menu>

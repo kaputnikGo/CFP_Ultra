@@ -9,13 +9,21 @@ import androidx.annotation.Nullable;
 
 import com.cityfreqs.cfp_ultra.scan.FreqDetector;
 import com.cityfreqs.cfp_ultra.scan.FreqDetector.RecordTaskListener;
-import com.cityfreqs.cfp_ultra.scan.ProcessAudioValue;
+import com.cityfreqs.cfp_ultra.scan.ProcessAlphaMode;
+import com.cityfreqs.cfp_ultra.scan.ProcessBinaryMode;
+import com.cityfreqs.cfp_ultra.scan.ProcessClockFSKMode;
+import com.cityfreqs.cfp_ultra.util.AudioSettings;
+
+import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_BUNDLE_KEYS;
 
 public class UltraService extends Service {
 	private static final String TAG = "UltraService";
-	private ProcessAudioValue processAudioValue;
+	private ProcessAlphaMode processAlphaMode;
+	private ProcessBinaryMode processBinaryMode;
+	private ProcessClockFSKMode processClockFSKMode;
 	private FreqDetector freqDetector;
-	
+
+	private int mode = AudioSettings.DEFAULT_MODE;
 	public boolean sequenceDetected = false;
 
 	public UltraService() {
@@ -30,21 +38,44 @@ public class UltraService extends Service {
 
 
 	public UltraService(Bundle audioBundle) {
+		mode = audioBundle.getInt(AUDIO_BUNDLE_KEYS[17], 1);
 		freqDetector = new FreqDetector(audioBundle);
 		freqDetector.init();
-		processAudioValue = new ProcessAudioValue();
+		switch (mode) {
+			case 1:
+				processAlphaMode = new ProcessAlphaMode(audioBundle);
+				break;
+			case 2:
+				processBinaryMode = new ProcessBinaryMode(audioBundle);
+				break;
+			case 3:
+				processClockFSKMode = new ProcessClockFSKMode(audioBundle);
+				break;
+			default:
+				processAlphaMode = new ProcessAlphaMode(audioBundle);
+		}
 	}
 	
-	public void runUltraService() {	
-        
+	public void runUltraService() {
         if (MainActivity.SCANNING) {
 			freqDetector.startRecording(new RecordTaskListener() {											
 			
 				public void onSuccess(int val) {
-					String str = processAudioValue.getCharFromFrequency(val);
-					if ((str != null) && (!str.equals(""))) {
-						sequenceDetected = processAudioValue.SEQUENCING;
-						MainActivity.payloadDelivery(str);
+					// alpha mode is legacy
+					if (mode == 1) {
+						String str = processAlphaMode.getCharFromFrequency(val);
+						if ((str != null) && (!str.equals(""))) {
+							sequenceDetected = processAlphaMode.SEQUENCING;
+							MainActivity.payloadDelivery(str);
+						}
+					}
+					else if (mode == 2) {
+						// mode is binary
+						processBinaryMode.addFrequency(val);
+					}
+					else {
+						// mode is clock FSK
+						processClockFSKMode.addFrequency(val);
 					}
 				}
 						
@@ -54,12 +85,23 @@ public class UltraService extends Service {
 			});				
         }       
 	}
-	
+
+	// need a programmatic end to service after sequence has been found
+
+	// called by MainActivity on touch
 	public void stopUltraService() {
 		try {
 			freqDetector.stopRecording();
 			sequenceDetected = false;
-			processAudioValue.resetSequences();
+			if (mode == 1) {
+				processAlphaMode.resetSequences();
+			}
+			else if (mode == 2) {
+				//
+			}
+			else {
+				//
+			}
 		} 
 		catch (Exception ex) {
 			MainActivity.logger(TAG, "Stop scanning failed.");

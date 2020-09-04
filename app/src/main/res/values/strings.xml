@@ -55,6 +55,13 @@ options menu
     <string name="option_dialog_12">Loudness level (dB):\u0020</string>
     <string name="option_dialog_13">FFT Window set to:\u0020</string>
 
+    <string name="action_mode_settings">Mode Select</string>
+    <string name="mode_type_1">Letter Sequence</string>
+    <string name="mode_type_2">Binary Bits</string>
+    <string name="mode_type_3">Clock FSK</string>
+
+    <string name="action_bundle_print">AudioBundle print</string>
+
     <!--
 AudioChecker.java
 -->

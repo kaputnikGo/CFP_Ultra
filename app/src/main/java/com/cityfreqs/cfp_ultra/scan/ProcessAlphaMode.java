@@ -1,23 +1,29 @@
 package com.cityfreqs.cfp_ultra.scan;
 
+import android.os.Bundle;
+
 import com.cityfreqs.cfp_ultra.MainActivity;
 
-public class ProcessAudioValue {
-	private static final String TAG = "ProcessAudio";
+import static com.cityfreqs.cfp_ultra.util.AudioSettings.ALPHABET;
+import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_BUNDLE_KEYS;
+
+public class ProcessAlphaMode {
+	private static final String TAG = "ProcessAlpha";
 	private String tempSeq;
 	private String builtSeq;
-	private int colourSeqLength;
-	private String startBit;
-	private String stopBit;	
+	private String startBit = String.valueOf(ALPHABET[0]);
+	private String stopBit = String.valueOf(ALPHABET[25]);
 	public boolean SEQUENCING = false;
-	
+	private Bundle audioBundle;
+
+	public ProcessAlphaMode(Bundle audioBundle) {
+		this.audioBundle = audioBundle;
+		resetSequences();
+	}
+
 /********************************************************************/
 	
 	public String getCharFromFrequency(int candidateFreq) {
-		// startbit prefix and seq length could be variables...
-		startBit = "A";
-		stopBit = "a";
-		colourSeqLength = 21;
 		String str = processSingleChar(getCorrespondingChar(candidateFreq));
 		if ((str != null) && (!str.equals(""))) {
 			// reset
@@ -32,65 +38,24 @@ public class ProcessAudioValue {
 	}
 	
 /********************************************************************/	
-	
+
 	private String getCorrespondingChar(int freq) {
-		switch (freq) {
-		    case 18000: 
-		    	return "A";
-		    case 18075: 
-		    	return "B";
-		    case 18150: 
-		    	return "C";
-		    case 18225: 
-		    	return "D";
-		    case 18300: 
-		    	return "E";
-		    case 18375: 
-		    	return "F";
-		    case 18450: 
-		    	return "G";
-		    case 18525: 
-		    	return "H";
-		    case 18600: 
-		    	return "I";
-		    case 18675: 
-		    	return "J";
-		    case 18750: 
-		    	return "K";
-		    case 18825: 
-		    	return "L";
-		    case 18900: 
-		    	return "M";
-		    case 18975: 
-		    	return "N";
-		    case 19050: 
-		    	return "O";
-		    case 19125: 
-		    	return "P";
-		    case 19200: 
-		    	return "Q";
-		    case 19275: 
-		    	return "R";
-		    case 19350: 
-		    	return "S";
-		    case 19425: 
-		    	return "T";
-		    case 19500: 
-		    	return "U";
-		    case 19575: 
-		    	return "V";
-		    case 19650: 
-		    	return "W";
-		    case 19725: 
-		    	return "X";
-		    case 19800: 
-		    	return "Y";
-		    case 19875: 
-		    	return "Z";
-		    case 19950:
-		    	return "a";
-			default: 
-				return null;
+		int alphaPos = 0;
+		// check for lowest value, as divide by zero
+		if (freq == audioBundle.getInt(AUDIO_BUNDLE_KEYS[9])) {
+			return startBit;
+		}
+		else {
+			alphaPos = ((freq - audioBundle.getInt(AUDIO_BUNDLE_KEYS[9]))
+					/ audioBundle.getInt(AUDIO_BUNDLE_KEYS[11]));
+		}
+		// check for beyond alphabet in case
+		if (alphaPos >= ALPHABET.length) {
+			return stopBit;
+		}
+		else {
+			// in range
+			return String.valueOf(ALPHABET[alphaPos]);
 		}
 	}
 	
@@ -153,7 +118,7 @@ public class ProcessAudioValue {
 	    }
 	    //CATCH AND DEFAULT
 	    else {
-	    	if (tempSeq.length() >= colourSeqLength) {
+	    	if (tempSeq.length() >= ALPHABET.length) {
 	    		MainActivity.logger(TAG, "tempSeq is filled.");
 	    		SEQUENCING = false;
 	    		return null;
