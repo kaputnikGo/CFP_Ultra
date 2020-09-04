@@ -518,11 +518,12 @@ public class MainActivity extends Activity {
 		public void run() {
 			try {				
 				if (ultraService != null) {
-					if (ultraService.sequenceDetected) {
+					if (ultraService.alphaSequence) {
 						// allow UltraService to continuously record for the sequence
 						colourDelivery();
 						runningDelay = SHORT_DELAY;
-					} else {
+					}
+					else {
 						runningDelay = LONG_DELAY;
 					}
 					ultraService.runUltraService();

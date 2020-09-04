@@ -24,7 +24,8 @@ public class UltraService extends Service {
 	private FreqDetector freqDetector;
 
 	private int mode = AudioSettings.DEFAULT_MODE;
-	public boolean sequenceDetected = false;
+	public boolean alphaSequence = false;
+	public boolean binarySequence = false;
 
 	public UltraService() {
 		// default no args constructor
@@ -65,13 +66,13 @@ public class UltraService extends Service {
 					if (mode == 1) {
 						String str = processAlphaMode.getCharFromFrequency(val);
 						if ((str != null) && (!str.equals(""))) {
-							sequenceDetected = processAlphaMode.SEQUENCING;
+							alphaSequence = processAlphaMode.SEQUENCING;
 							MainActivity.payloadDelivery(str);
 						}
 					}
 					else if (mode == 2) {
 						// mode is binary
-						processBinaryMode.addFrequency(val);
+						binarySequence = processBinaryMode.addFrequency(val);
 					}
 					else {
 						// mode is clock FSK
@@ -92,12 +93,14 @@ public class UltraService extends Service {
 	public void stopUltraService() {
 		try {
 			freqDetector.stopRecording();
-			sequenceDetected = false;
 			if (mode == 1) {
+				alphaSequence = false;
 				processAlphaMode.resetSequences();
 			}
 			else if (mode == 2) {
 				//
+				binarySequence = false;
+				processBinaryMode.resetSequences();
 			}
 			else {
 				//
