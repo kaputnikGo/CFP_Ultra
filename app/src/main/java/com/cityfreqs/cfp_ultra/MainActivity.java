@@ -29,6 +29,8 @@ import android.widget.Toast;
 import com.cityfreqs.cfp_ultra.util.AudioChecker;
 import com.cityfreqs.cfp_ultra.util.AudioSettings;
 
+import java.util.Arrays;
+
 import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_BUNDLE_KEYS;
 import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_CHANNEL_IN;
 import static com.cityfreqs.cfp_ultra.util.AudioSettings.AUDIO_ENCODING;
@@ -62,6 +64,7 @@ public class MainActivity extends Activity {
 	private int runningDelay = LONG_DELAY;
 
 	private static int displayCounter;
+	private static boolean serviceCalledStop;
 
 	private Bundle audioBundle;
 	private AlertDialog.Builder dialogBuilder;
@@ -177,7 +180,7 @@ public class MainActivity extends Activity {
 
 		audioBundle = new Bundle();
 		audioBundle.putInt(AUDIO_BUNDLE_KEYS[11], AudioSettings.DEFAULT_FREQ_STEP);
-		audioBundle.putInt(AUDIO_BUNDLE_KEYS[12], AudioSettings.DEFAULT_MAGNITUDE);
+		audioBundle.putDouble(AUDIO_BUNDLE_KEYS[12], AudioSettings.DEFAULT_MAGNITUDE);
 		audioBundle.putInt(AUDIO_BUNDLE_KEYS[13], AudioSettings.DEFAULT_WINDOW_TYPE);
 		audioBundle.putBoolean(AUDIO_BUNDLE_KEYS[14], false); //write audio files not applicable
 		audioBundle.putBoolean(AUDIO_BUNDLE_KEYS[16], DEBUG); //set DEBUG
@@ -196,6 +199,7 @@ public class MainActivity extends Activity {
 			handlerU = new Handler();
 			colourString = "A";
 			displayCounter = 0;
+			serviceCalledStop = false;
 		}
 		else {
 			logger(TAG, "Failed to init audio device.");
@@ -335,7 +339,7 @@ public class MainActivity extends Activity {
 		dialogBuilder = new AlertDialog.Builder(this);
 		dialogBuilder.setItems(dbLevel, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialogInterface, int which) {
-				audioBundle.putDouble(AUDIO_BUNDLE_KEYS[13], AudioSettings.MAGNITUDES[which]);
+				audioBundle.putDouble(AUDIO_BUNDLE_KEYS[12], AudioSettings.MAGNITUDES[which]);
 				logger(TAG, getResources().getString(R.string.option_dialog_12) + AudioSettings.DECIBELS[which]);
 			}
 		});
@@ -458,10 +462,10 @@ public class MainActivity extends Activity {
 
 /********************************************************************/
 		
-	public static void payloadDelivery(String delivery) {
+	public static void alphaDelivery(String delivery) {
 		// receive a letter from the service
 		// TODO Twitch test gets to G with mid output
-		logger(TAG, "delivery string: " + delivery);
+		logger(TAG, "alpha delivery: " + delivery);
 		colourString = delivery;
 		if (colourString.compareTo("A") == 0) {
 			displayCounter = 1;
@@ -504,10 +508,27 @@ public class MainActivity extends Activity {
 	}
 	
 	private void invokeWebsite() {
-		// load up device default browser with webpage
+		// load up device default browser with webpage,
+		// TODO add some PII vars from device to print to webpage  too
 		Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://akm.net.au/pilfershush/index.html"));
 		startActivity(browserIntent);
 	}
+
+/********************************************************************/
+
+public static void binaryDelivery(String[] delivery) {
+	// receive possible binary bit String[] from the service
+	// or a null
+	if (delivery == null) {
+		Log.d(TAG, "Received a null delivery array from UltraService.");
+	}
+	else {
+		// should have a String[16] of 1s and 0s
+		logger(TAG, "binary delivery: " + Arrays.toString(delivery));
+		// stop the service if running
+		serviceCalledStop = true;
+	}
+}
 
 /********************************************************************/		
 	
@@ -521,6 +542,9 @@ public class MainActivity extends Activity {
 					if (ultraService.alphaSequence) {
 						// allow UltraService to continuously record for the sequence
 						colourDelivery();
+						runningDelay = SHORT_DELAY;
+					}
+					else if (ultraService.binarySequence) {
 						runningDelay = SHORT_DELAY;
 					}
 					else {
@@ -543,6 +567,11 @@ public class MainActivity extends Activity {
 	private void stopService() {
 		if (ultraService != null) {
 			handlerU.removeCallbacks(serviceRunner);
+			if (audioBundle.getInt(AUDIO_BUNDLE_KEYS[17]) == 2) {
+				// BinaryBit mode
+				Log.d(TAG, "Manually stopping service.");
+				ultraService.endBinaryScan();
+			}
 			ultraService.stopUltraService();
 		}
 		SCANNING = false;

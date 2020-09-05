@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -26,6 +27,7 @@ public class UltraService extends Service {
 	private int mode = AudioSettings.DEFAULT_MODE;
 	public boolean alphaSequence = false;
 	public boolean binarySequence = false;
+	public boolean clockFSKSequence = false;
 
 	public UltraService() {
 		// default no args constructor
@@ -67,16 +69,22 @@ public class UltraService extends Service {
 						String str = processAlphaMode.getCharFromFrequency(val);
 						if ((str != null) && (!str.equals(""))) {
 							alphaSequence = processAlphaMode.SEQUENCING;
-							MainActivity.payloadDelivery(str);
+							MainActivity.alphaDelivery(str);
 						}
 					}
 					else if (mode == 2) {
 						// mode is binary
 						binarySequence = processBinaryMode.addFrequency(val);
+						// can be triggered by processBinaryMode
+						if (processBinaryMode.hasBinaryPayload()) {
+							MainActivity.binaryDelivery(processBinaryMode.getBinaryPayload());
+							stopUltraService();
+						}
+
 					}
 					else {
 						// mode is clock FSK
-						processClockFSKMode.addFrequency(val);
+						clockFSKSequence = processClockFSKMode.addFrequency(val);
 					}
 				}
 						
@@ -88,6 +96,16 @@ public class UltraService extends Service {
 	}
 
 	// need a programmatic end to service after sequence has been found
+	public void endBinaryScan() {
+		//
+		if (processBinaryMode.hasBinaryPayload()) {
+			MainActivity.binaryDelivery(processBinaryMode.getBinaryPayload());
+		}
+		else {
+			Log.d(TAG, "hasBinaryPayload reports NO.");
+		}
+
+	}
 
 	// called by MainActivity on touch
 	public void stopUltraService() {
@@ -104,6 +122,8 @@ public class UltraService extends Service {
 			}
 			else {
 				//
+				clockFSKSequence = false;
+				processClockFSKMode.resetSequences();
 			}
 		} 
 		catch (Exception ex) {

@@ -11,9 +11,13 @@ Android near ultra-high frequency demonstration listener with web intent invoker
 - more testing
 - fix the stop touch area
 - possible conform payloadDelivery() to Twitch stream bandwidth
+- binaryBit and clockFSK may need carrier to signal a recording start, then process for logic
+    or use mode to refine the scan to within parameters of tranmission, ie binary has carrier with step - scan in that range
 - detect and parse binaryBit mode test of : 0010 0110 0110 0101
     has a carrier and bits +/- distance from carrier interspersed
     ie: carrier, 0, carrier, 0, carrier, 1, carrier, 0, ...
+    
+
 - Clock FSK mode, parse the assembly program into opcodes or similar.    
 - make a release
 - publish to GPlay? FDroid?

@@ -178,7 +178,9 @@ public class RecordTask extends AsyncTask<Void, Integer, String> {
 				// look for any of our freqs here, increment by freqStepper
 				// this will result in a found candidate for anything in our ranges...
 				// also result in multiple false positives as need a length of signal?
-				
+
+				// TODO this method is += scanner over full NUHF range.
+				// TODO need to have a scn rapidly within narrow range scanner
 				// this also means that our listener will only listen for char sequences that rise in freqStep value...
 				// ie. alphabetical order...
 
@@ -190,7 +192,7 @@ public class RecordTask extends AsyncTask<Void, Integer, String> {
 				double candidateMag = goertzel.getOptimisedMagnitude();
 				// set magnitude floor, raises it
 				// check if above threshold
-				if (candidateMag >= audioBundle.getInt(AudioSettings.AUDIO_BUNDLE_KEYS[12])) {
+				if (candidateMag >= audioBundle.getDouble(AudioSettings.AUDIO_BUNDLE_KEYS[12])) {
 					publishProgress(candidateFreq);
 				}								
 				// next freq for loop
